@@ -10,51 +10,21 @@ exports.handler = async (event) => {
       return { statusCode: 500, body: 'Missing Telegram config' };
     }
 
-    // Parse multipart form-data
-    const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
-    if (!contentType.startsWith('multipart/form-data')) {
-      return { statusCode: 400, body: 'Expected multipart/form-data' };
+    const { pdfBase64, fileName, groom, bride } = JSON.parse(event.body || '{}');
+    if (!pdfBase64) {
+      return { statusCode: 400, body: 'Missing pdfBase64' };
     }
 
-    const busboy = require('busboy');
-    const bb = busboy({ headers: { 'content-type': contentType } });
+    const buffer = Buffer.from(pdfBase64, 'base64');
 
-    const buffers = [];
-    let groom = '';
-    let bride = '';
-    let filename = 'anketa.pdf';
-    let fileBuffer = null;
+    // Use Node 18+ global fetch and FormData/Blob
+    const form = new FormData();
+    form.append('chat_id', CHAT_ID);
+    form.append('caption', `Анкета: ${groom || ''} ${bride ? 'и ' + bride : ''}`.trim());
+    form.append('document', new Blob([buffer], { type: 'application/pdf' }), fileName || 'anketa.pdf');
 
-    await new Promise((resolve, reject) => {
-      bb.on('file', (_, file, info) => {
-        filename = info.filename || filename;
-        file.on('data', (d) => buffers.push(d));
-        file.on('end', () => {
-          fileBuffer = Buffer.concat(buffers);
-        });
-      });
-      bb.on('field', (name, val) => {
-        if (name === 'groom') groom = val;
-        if (name === 'bride') bride = val;
-      });
-      bb.on('error', reject);
-      bb.on('close', resolve);
-      bb.end(Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8'));
-    });
-
-    if (!fileBuffer) {
-      return { statusCode: 400, body: 'No file' };
-    }
-
-    // Send document to Telegram
-    const formData = new (require('form-data'))();
-    formData.append('chat_id', CHAT_ID);
-    formData.append('caption', `Анкета: ${groom} и ${bride}`.trim());
-    formData.append('document', fileBuffer, { filename, contentType: 'application/pdf' });
-
-    const fetch = require('node-fetch');
     const tgUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
-    const tgRes = await fetch(tgUrl, { method: 'POST', body: formData });
+    const tgRes = await fetch(tgUrl, { method: 'POST', body: form });
     if (!tgRes.ok) {
       const text = await tgRes.text();
       return { statusCode: 502, body: `Telegram error: ${text}` };

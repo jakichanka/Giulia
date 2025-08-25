@@ -111,15 +111,14 @@
     }
 
     const blob = doc.output('blob');
-    const file = new File([blob], `Анкета_${obj.groom || groomDefault}_${obj.bride || brideDefault}.pdf`, { type: 'application/pdf' });
-    const form = new FormData();
-    form.append('file', file);
-    form.append('groom', obj.groom || groomDefault || '');
-    form.append('bride', obj.bride || brideDefault || '');
+    const arrayBuffer = await blob.arrayBuffer();
+    const pdfBase64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const fileName = `Анкета_${obj.groom || groomDefault}_${obj.bride || brideDefault}.pdf`;
 
     const res = await fetch('/.netlify/functions/send-telegram', {
       method: 'POST',
-      body: form
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pdfBase64, fileName, groom: obj.groom || groomDefault || '', bride: obj.bride || brideDefault || '' })
     });
     if (!res.ok) throw new Error('Send failed');
   }
