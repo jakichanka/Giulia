@@ -33,8 +33,12 @@
   const modal = document.getElementById('formModal');
   const onlineBtn = document.getElementById('onlineBtn');
   const closeModal = document.getElementById('closeModal');
-  onlineBtn.addEventListener('click', () => modal.showModal());
-  closeModal.addEventListener('click', () => modal.close());
+  const lockX = () => {
+    document.documentElement.style.overflowX = 'hidden';
+    document.body.style.overflowX = 'hidden';
+  };
+  onlineBtn.addEventListener('click', () => { modal.showModal(); lockX(); });
+  closeModal.addEventListener('click', () => { modal.close(); lockX(); });
 
   // Save filled data as file
   document.getElementById('saveDraft').addEventListener('click', () => {
