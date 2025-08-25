@@ -16,6 +16,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   </head>
   <body>
     <div id="bg-gradient"></div>
@@ -35,8 +36,7 @@
           <span id="deadlineDate">28 августа</span>
         </p>
         <div class="actions">
-          <button id="downloadBtn" class="btn primary">Скачать анкету</button>
-          <button id="onlineBtn" class="btn ghost">Заполнить онлайн</button>
+          <button id="onlineBtn" class="btn primary">Заполнить онлайн</button>
         </div>
         <footer class="footer">
           <span>© Юлия Орденко</span>
@@ -107,9 +107,6 @@
         </div>
         <footer class="modal-footer">
           <button type="submit" class="btn primary">Отправить</button>
-          <button type="button" id="saveDraft" class="btn">
-            Сохранить как файл
-          </button>
         </footer>
       </form>
     </dialog>

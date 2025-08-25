@@ -24,11 +24,7 @@
   document.getElementById('groomInput').value = groom;
   document.getElementById('brideInput').value = bride;
 
-  // Buttons
-  document.getElementById('downloadBtn').addEventListener('click', () => {
-    const text = buildQuestionnaireText({ groom, bride });
-    downloadText(text, `Анкета_${groom}_${bride}.txt`);
-  });
+  // Buttons: only online now
 
   const modal = document.getElementById('formModal');
   const onlineBtn = document.getElementById('onlineBtn');
@@ -40,23 +36,15 @@
   onlineBtn.addEventListener('click', () => { modal.showModal(); lockX(); });
   closeModal.addEventListener('click', () => { modal.close(); lockX(); });
 
-  // Save filled data as file
-  document.getElementById('saveDraft').addEventListener('click', () => {
-    const form = document.getElementById('questionnaireForm');
-    const data = new FormData(form);
-    const obj = Object.fromEntries(data.entries());
-    const text = buildQuestionnaireText(obj);
-    downloadText(text, `Анкета_${obj.groom || groom}_${obj.bride || bride}.txt`);
-  });
-
   // Submit form: simulate sending by saving file and closing
   document.getElementById('questionnaireForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const obj = Object.fromEntries(data.entries());
-    const text = buildQuestionnaireText(obj);
-    downloadText(text, `Анкета_${obj.groom || groom}_${obj.bride || bride}.txt`);
-    modal.close();
+    // Generate PDF and send
+    generateAndSendPdf(obj, groom, bride)
+      .then(() => { modal.close(); alert('Анкета отправлена!'); })
+      .catch((err) => { console.error(err); alert('Не удалось отправить. Попробуйте позже.'); });
   });
 
   // Hearts wow effect
@@ -84,16 +72,56 @@
     ].join('\n');
   }
 
-  function downloadText(text, fileName) {
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+  async function generateAndSendPdf(obj, groomDefault, brideDefault) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const margin = 40;
+    const maxWidth = 515; // A4 width (595pt) - margins
+    const title = 'Анкета подготовки к свадьбе';
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text(title, margin, margin);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(12);
+    const lines = [
+      `Имя жениха: ${obj.groom || groomDefault || ''}`,
+      `Имя невесты: ${obj.bride || brideDefault || ''}`,
+      `Дата свадьбы: ${obj.wedding_date || ''}`,
+      `Время церемонии: ${obj.ceremony_time || ''}`,
+      `Площадка / адрес: ${obj.venue || ''}`,
+      `Количество гостей: ${obj.guests || ''}`,
+      `Контакт для связи: ${obj.contact || ''}`,
+      `Музыкальные предпочтения: ${obj.music || ''}`,
+      `Самое важное в этом дне:`,
+      `${obj.priorities || ''}`,
+      `Комментарии и пожелания:`,
+      `${obj.notes || ''}`,
+    ];
+
+    let cursorY = margin + 24;
+    for (const row of lines) {
+      const splitted = doc.splitTextToSize(row, maxWidth);
+      for (const ln of splitted) {
+        if (cursorY > 800) { doc.addPage(); cursorY = margin; }
+        doc.text(ln, margin, cursorY);
+        cursorY += 18;
+      }
+      cursorY += 6;
+    }
+
+    const blob = doc.output('blob');
+    const file = new File([blob], `Анкета_${obj.groom || groomDefault}_${obj.bride || brideDefault}.pdf`, { type: 'application/pdf' });
+    const form = new FormData();
+    form.append('file', file);
+    form.append('groom', obj.groom || groomDefault || '');
+    form.append('bride', obj.bride || brideDefault || '');
+
+    const res = await fetch('/.netlify/functions/send-telegram', {
+      method: 'POST',
+      body: form
+    });
+    if (!res.ok) throw new Error('Send failed');
   }
 
   function parseInputDate(s) {
