@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Анкета подготовки к свадьбе</title>
+    <meta
+      name="description"
+      content="Страница с анкетой для подготовки к вашему свадебному дню."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="bg-gradient"></div>
+    <div id="hearts-layer" aria-hidden="true"></div>
+
+    <main id="content" class="container">
+      <section class="hero reveal">
+        <h1 class="couple" id="coupleTitle">Илья и Екатерина,</h1>
+        <h2 class="subtitle">начнём подготовку?</h2>
+        <p class="lead">
+          Спасибо, что доверили мне своё значимое событие! Чтобы побольше узнать
+          о вас, лучше подготовиться и составить тайминг, который мы обсудим на
+          ближайшей встрече, заполните анкету.
+        </p>
+        <p class="note" id="deadlineLine" hidden>
+          Рекомендую заполнить и отправить не позднее
+          <span id="deadlineDate">28 августа</span>
+        </p>
+        <div class="actions">
+          <button id="downloadBtn" class="btn primary">Скачать анкету</button>
+          <button id="onlineBtn" class="btn ghost">Заполнить онлайн</button>
+        </div>
+        <footer class="footer">
+          <span>© Юлия Орденко</span>
+        </footer>
+      </section>
+    </main>
+
+    <dialog id="formModal" class="modal">
+      <form id="questionnaireForm" method="dialog" class="modal-content">
+        <header class="modal-header">
+          <h3>Анкета</h3>
+          <button
+            type="button"
+            id="closeModal"
+            class="icon-btn"
+            aria-label="Закрыть"
+          >
+            ✕
+          </button>
+        </header>
+        <div class="modal-body">
+          <div class="grid">
+            <label class="field">
+              <span>Имя жениха</span>
+              <input type="text" name="groom" id="groomInput" required />
+            </label>
+            <label class="field">
+              <span>Имя невесты</span>
+              <input type="text" name="bride" id="brideInput" required />
+            </label>
+            <label class="field">
+              <span>Дата свадьбы</span>
+              <input type="date" name="wedding_date" required />
+            </label>
+            <label class="field">
+              <span>Время церемонии</span>
+              <input type="time" name="ceremony_time" />
+            </label>
+            <label class="field">
+              <span>Площадка / адрес</span>
+              <input type="text" name="venue" />
+            </label>
+            <label class="field">
+              <span>Количество гостей</span>
+              <input type="number" name="guests" min="0" />
+            </label>
+            <label class="field">
+              <span>Контакт для связи</span>
+              <input
+                type="text"
+                name="contact"
+                placeholder="Телефон или email"
+              />
+            </label>
+            <label class="field">
+              <span>Музыкальные предпочтения</span>
+              <input type="text" name="music" />
+            </label>
+            <label class="field span-2">
+              <span>Что для вас самое важное в этом дне?</span>
+              <textarea name="priorities" rows="3"></textarea>
+            </label>
+            <label class="field span-2">
+              <span>Комментарии и пожелания</span>
+              <textarea name="notes" rows="4"></textarea>
+            </label>
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button type="submit" class="btn primary">Отправить</button>
+          <button type="button" id="saveDraft" class="btn">
+            Сохранить как файл
+          </button>
+        </footer>
+      </form>
+    </dialog>
+
+    <script src="script.js"></script>
+  </body>
+</html>
