@@ -153,6 +153,29 @@ html {
   text-align: center;
 }
 
+/* Toast notification */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(20px);
+  background: #1f1f1f;
+  color: #fff;
+  padding: 12px 14px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  max-width: min(92vw, 520px);
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  z-index: 50;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .modal::backdrop {
   background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(2px);
@@ -172,6 +195,10 @@ html {
   overflow-x: hidden;
   max-height: calc(100dvh - 24px);
   overflow-y: auto;
+  will-change: transform, opacity;
+}
+.modal[open] .modal-content {
+  animation: none;
 }
 .modal-header {
   display: flex;
@@ -189,6 +216,32 @@ html {
   justify-content: flex-end;
   padding: 16px 18px;
   border-top: 1px solid #eee;
+}
+
+/* Loading state for submit button */
+.btn.loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.85;
+  padding-right: 36px;
+}
+.btn.loading::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .icon-btn {

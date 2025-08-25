@@ -1,0 +1,18 @@
+{
+  "name": "wedding-invite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Single-page wedding organizer landing with form and Telegram sending via Netlify Functions",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "npx serve -l 5173 .",
+    "build": "echo No build step required",
+    "netlify:serve": "netlify dev"
+  },
+  "dependencies": {
+    "undici": "^6.18.1"
+  },
+  "devDependencies": {}
+}

@@ -14,7 +14,9 @@ exports.handler = async (event) => {
     const text = formatMessage(body);
 
     const tgUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-    const tgRes = await fetch(tgUrl, {
+    // Prefer global fetch; on some environments use undici ponyfills
+    const _fetch = globalThis.fetch || (await import('undici')).fetch;
+    const tgRes = await _fetch(tgUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

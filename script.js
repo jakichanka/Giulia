@@ -37,14 +37,27 @@
   closeModal.addEventListener('click', () => { modal.close(); lockX(); });
 
   // Submit form: simulate sending by saving file and closing
-  document.getElementById('questionnaireForm').addEventListener('submit', (e) => {
+  document.getElementById('questionnaireForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const obj = Object.fromEntries(data.entries());
-    // Send formatted text to Telegram
-    sendAsText(obj, groom, bride)
-      .then(() => { modal.close(); alert('Анкета отправлена!'); })
-      .catch((err) => { console.error(err); alert('Не удалось отправить. Попробуйте позже.'); });
+    const submitBtn = document.getElementById('submitBtn');
+    const prevText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.textContent = 'Отправляем...';
+    try {
+      const data = new FormData(e.currentTarget);
+      const obj = Object.fromEntries(data.entries());
+      await sendAsText(obj, groom, bride);
+      modal.close();
+      showToast('Анкета отправлена. Спасибо!');
+    } catch (err) {
+      console.error(err);
+      alert('Не удалось отправить. Попробуйте позже.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('loading');
+      submitBtn.textContent = prevText;
+    }
   });
 
   // Hearts wow effect
@@ -91,6 +104,17 @@
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Send failed');
+  }
+
+  // Toast helper
+  let toastTimer = null;
+  function showToast(message) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
   }
 
   function parseInputDate(s) {
