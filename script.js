@@ -41,8 +41,8 @@
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const obj = Object.fromEntries(data.entries());
-    // Generate PDF and send
-    generateAndSendPdf(obj, groom, bride)
+    // Send formatted text to Telegram
+    sendAsText(obj, groom, bride)
       .then(() => { modal.close(); alert('Анкета отправлена!'); })
       .catch((err) => { console.error(err); alert('Не удалось отправить. Попробуйте позже.'); });
   });
@@ -72,53 +72,23 @@
     ].join('\n');
   }
 
-  async function generateAndSendPdf(obj, groomDefault, brideDefault) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    const margin = 40;
-    const maxWidth = 515; // A4 width (595pt) - margins
-    const title = 'Анкета подготовки к свадьбе';
-    doc.setFont('Helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text(title, margin, margin);
-
-    doc.setFont('Helvetica', 'normal');
-    doc.setFontSize(12);
-    const lines = [
-      `Имя жениха: ${obj.groom || groomDefault || ''}`,
-      `Имя невесты: ${obj.bride || brideDefault || ''}`,
-      `Дата свадьбы: ${obj.wedding_date || ''}`,
-      `Время церемонии: ${obj.ceremony_time || ''}`,
-      `Площадка / адрес: ${obj.venue || ''}`,
-      `Количество гостей: ${obj.guests || ''}`,
-      `Контакт для связи: ${obj.contact || ''}`,
-      `Музыкальные предпочтения: ${obj.music || ''}`,
-      `Самое важное в этом дне:`,
-      `${obj.priorities || ''}`,
-      `Комментарии и пожелания:`,
-      `${obj.notes || ''}`,
-    ];
-
-    let cursorY = margin + 24;
-    for (const row of lines) {
-      const splitted = doc.splitTextToSize(row, maxWidth);
-      for (const ln of splitted) {
-        if (cursorY > 800) { doc.addPage(); cursorY = margin; }
-        doc.text(ln, margin, cursorY);
-        cursorY += 18;
-      }
-      cursorY += 6;
-    }
-
-    const blob = doc.output('blob');
-    const arrayBuffer = await blob.arrayBuffer();
-    const pdfBase64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    const fileName = `Анкета_${obj.groom || groomDefault}_${obj.bride || brideDefault}.pdf`;
-
+  async function sendAsText(obj, groomDefault, brideDefault) {
+    const payload = {
+      groom: obj.groom || groomDefault || '',
+      bride: obj.bride || brideDefault || '',
+      wedding_date: obj.wedding_date || '',
+      ceremony_time: obj.ceremony_time || '',
+      venue: obj.venue || '',
+      guests: obj.guests || '',
+      contact: obj.contact || '',
+      music: obj.music || '',
+      priorities: obj.priorities || '',
+      notes: obj.notes || ''
+    };
     const res = await fetch('/.netlify/functions/send-telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pdfBase64, fileName, groom: obj.groom || groomDefault || '', bride: obj.bride || brideDefault || '' })
+      body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Send failed');
   }

@@ -10,21 +10,20 @@ exports.handler = async (event) => {
       return { statusCode: 500, body: 'Missing Telegram config' };
     }
 
-    const { pdfBase64, fileName, groom, bride } = JSON.parse(event.body || '{}');
-    if (!pdfBase64) {
-      return { statusCode: 400, body: 'Missing pdfBase64' };
-    }
+    const body = JSON.parse(event.body || '{}');
+    const text = formatMessage(body);
 
-    const buffer = Buffer.from(pdfBase64, 'base64');
-
-    // Use Node 18+ global fetch and FormData/Blob
-    const form = new FormData();
-    form.append('chat_id', CHAT_ID);
-    form.append('caption', `Анкета: ${groom || ''} ${bride ? 'и ' + bride : ''}`.trim());
-    form.append('document', new Blob([buffer], { type: 'application/pdf' }), fileName || 'anketa.pdf');
-
-    const tgUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
-    const tgRes = await fetch(tgUrl, { method: 'POST', body: form });
+    const tgUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    const tgRes = await fetch(tgUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true
+      })
+    });
     if (!tgRes.ok) {
       const text = await tgRes.text();
       return { statusCode: 502, body: `Telegram error: ${text}` };
@@ -35,5 +34,37 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: e.message };
   }
 };
+
+function escapeHtml(s = '') {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function formatMessage(data) {
+  const lines = [];
+  const add = (label, val) => {
+    if (val) lines.push(`<b>${label}</b> ${escapeHtml(val)}`);
+  };
+  lines.push('<b>Новая анкета</b>');
+  add('Жених:', data.groom);
+  add('Невеста:', data.bride);
+  add('Дата свадьбы:', data.wedding_date);
+  add('Время церемонии:', data.ceremony_time);
+  add('Площадка / адрес:', data.venue);
+  add('Количество гостей:', data.guests);
+  add('Контакт для связи:', data.contact);
+  add('Музыкальные предпочтения:', data.music);
+  if (data.priorities) {
+    lines.push('<b>Самое важное в этом дне:</b>');
+    lines.push(escapeHtml(data.priorities));
+  }
+  if (data.notes) {
+    lines.push('<b>Комментарии и пожелания:</b>');
+    lines.push(escapeHtml(data.notes));
+  }
+  return lines.join('\n');
+}
 
 
